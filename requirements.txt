@@ -1,0 +1,11 @@
+pandas==2.3.3
+numpy==2.3.5
+matplotlib==3.10.6
+seaborn==0.13.2
+scikit-learn==1.7.2
+sqlalchemy==2.0.43
+psycopg2-binary==2.9.12
+faker==40.15.0
+scipy==1.16.3
+jupyter==1.1.1
+python-dotenv==1.0.0
