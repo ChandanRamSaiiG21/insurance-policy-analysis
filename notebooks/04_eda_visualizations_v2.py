@@ -74,10 +74,19 @@ plt.rcParams.update({
 
 
 # ─────────────────────────────────────────────────────────────
-# 1. DB CONNECTION
+# 1. DB CONNECTION (credentials loaded from .env)
 # ─────────────────────────────────────────────────────────────
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+
+load_dotenv(
+    dotenv_path=Path("D:/DataAnalyticsProjects/insurance-policy-analysis/.env"),
+    encoding="utf-8-sig"
+)
+
 def get_engine():
-    password = quote_plus("IIM@ABCLKi12")
+    password = quote_plus(os.getenv("DB_PASSWORD", "NOT_FOUND"))
     url = (
         f"postgresql+psycopg2://{DB_USER}:{password}"
         f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"

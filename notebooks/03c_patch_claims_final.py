@@ -26,18 +26,25 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+from urllib.parse import quote_plus
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import URL
+
 random.seed(42)
 np.random.seed(42)
 
-connection_url = URL.create(
-    drivername="postgresql+psycopg2",
-    username="postgres",
-    password="IIM@ABCLKi12",
-    host="localhost",
-    port=5432,
-    database="insurance_policy_db"
+load_dotenv(
+    dotenv_path=Path("D:/DataAnalyticsProjects/insurance-policy-analysis/.env"),
+    encoding="utf-8-sig"
 )
-engine = create_engine(connection_url, echo=False)
+_pwd   = quote_plus(os.getenv("DB_PASSWORD", "NOT_FOUND"))
+engine = create_engine(
+    f"postgresql+psycopg2://postgres:{_pwd}@localhost:5432/insurance_policy_db",
+    echo=False
+)
 
 with engine.connect() as conn:
     print(f"Connected to: {conn.execute(text('SELECT current_database()')).scalar()}")
