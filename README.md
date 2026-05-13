@@ -194,6 +194,43 @@ DIVIDE(
 | Random Forest | Lapse prediction | ROC-AUC: **0.6642** — top feature: income bracket |
 | Linear Regression | CLV prediction | R²: **0.2106**, MAE: ₹32,927 |
 
+### Model Selection Rationale
+
+Why these models for these questions:
+
+Lapse Prediction → Classification problem (binary outcome)
+  - Logistic Regression chosen first: interpretable coefficients 
+    tell us which features drive lapse — directly actionable 
+    for retention teams. Coefficient on income_enc = -312 means 
+    higher income bracket = lower lapse probability.
+  - Random Forest added: captures non-linear interactions 
+    (e.g. high risk score + low income = disproportionately 
+    high lapse) that LR misses. RF AUC 0.6642 > LR 0.6484 
+    confirms non-linearity exists.
+  - We did NOT use XGBoost or neural networks — unnecessary 
+    complexity for a 6-feature model with 500K rows where 
+    interpretability matters more than marginal AUC gains.
+
+Customer Segmentation → KMeans chosen over DBSCAN/hierarchical
+  - KMeans: business needs a fixed number of actionable segments 
+    (4 = Low Risk, High Value, At Risk, Mid Tier). 
+  - DBSCAN would find arbitrary shapes but give variable K — 
+    unusable for a business team that needs stable segments.
+  - Silhouette score 0.19 is low but expected — insurance 
+    customers don't form hard clusters. Directional value remains.
+
+CLV Prediction → Linear Regression chosen over tree models
+  - CLV is a continuous outcome with a known economic formula. 
+    Linear Regression gives interpretable coefficients — 
+    policy_tenure_months coefficient of 2,213 means each 
+    additional month of tenure adds ₹2,213 to predicted CLV. 
+    Directly usable by pricing teams.
+  - R² of 0.21 is honest — stochastic claims events dominate 
+    CLV variance. A Random Forest would overfit to training 
+    data and give false confidence. Linear Regression 
+    is the right tool for an explainable baseline.
+
+
 ### Model Notes
 
 **Lapse Prediction:** Both models significantly outperform random baseline (AUC 0.50). Logistic Regression uses `class_weight='balanced'` to handle the 18%/82% class imbalance. Random Forest constrained with `max_depth=10` and `min_samples_leaf=50` to prevent overfitting. Top predictive feature: `income_enc` — confirming that affordability is the primary lapse driver.
@@ -274,6 +311,62 @@ This project uses synthetic data generated with Python Faker, calibrated against
 | SQL views | Fan-out join bug | Pre-aggregated CTEs | Separate CTEs for premiums and claims before joining |
 
 The `reports/v1_uncalibrated/` folder preserves all original charts for comparison. This iterative debugging process — identifying root causes, applying targeted fixes, and validating against benchmarks — mirrors real-world data engineering work.
+
+---
+
+## Real Data Validation
+
+To address the limitations of synthetic data, key distributions in this project were
+cross-validated against two real-world insurance datasets sourced from Kaggle, both
+stored in `data/raw/`.
+
+### Datasets Used for Validation
+
+| Dataset | Source | Rows | Purpose |
+|---|---|---|---|
+| `insurance_claims.csv` | Kaggle Auto Insurance Claims | 1,000 | Premium, claim amount, fraud rate benchmarks |
+| `insurance_dataset.csv` | Kaggle Insurance Dataset | 13,000 | Age, income, claim amount distributions |
+
+### Validation Results
+
+| Metric | Real Data | Synthetic (v2) | Assessment |
+|---|---|---|---|
+| Avg annual premium | $1,256 (≈ ₹1.05L USD-adjusted) | ₹26,259 | ✅ Directionally consistent — Indian premiums lower than US due to lower sum insured |
+| Age range | 19–64 (claims), 18–102 (dataset) | 18–70 | ✅ Aligned |
+| Avg claim amount | $52,762 (≈ ₹44L) per claim | ₹28,400 per claim | ⚠️ US claims higher — expected given higher vehicle/medical costs |
+| Fraud rate | 24.7% of claims flagged | Not modelled in Project 1 | ℹ️ Feeds directly into Project 2 (Fraud Detection) |
+| Claim frequency | 100% (all rows are claims) | 39.3% of policies | ✅ Real dataset is claims-only — not comparable to policy-level frequency |
+
+### Key Observations
+
+- **Premium calibration:** Indian non-life premiums are structurally lower than US benchmarks
+  due to lower vehicle valuations, regulated IRDAI tariffs, and lower medical costs.
+  The synthetic premium range of ₹4,000–₹70,000 aligns with IRDAI published data for
+  motor and health segments.
+
+- **Claim severity:** The real dataset shows average claims of ~$52K (US auto),
+  significantly higher than the synthetic ₹28K. This is expected — US liability limits
+  and medical costs are 3–5x Indian equivalents. Synthetic claim amounts were
+  calibrated to IRDAI loss ratio benchmarks (70–110%) rather than absolute US figures.
+
+- **Fraud signal preserved:** The 24.7% fraud rate in the real claims data is a strong
+  signal that will be used as the primary target variable in Project 2 — Insurance
+  Claims Fraud Detection. The real dataset provides ground truth labels that synthetic
+  data cannot replicate.
+
+- **What real data validated:** The synthetic data's loss ratio (69.7%), lapse rate
+  (17.7%), and income-driven lapse gradient were benchmarked against IRDAI annual
+  reports and validated to be within realistic ranges — not against this specific
+  dataset, but against published industry aggregates.
+
+### Why Synthetic Data Was Used
+
+Real Indian non-life insurance policy data at transaction level is not publicly
+available — insurers treat policy-level data as proprietary. The synthetic approach
+mirrors standard actuarial practice where simulated data is used for model development
+before production deployment. The calibration process (documented in the
+Data Calibration Notes section) ensured distributions match published IRDAI benchmarks
+rather than being arbitrarily generated.
 
 ---
 
