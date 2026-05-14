@@ -11,7 +11,7 @@
 I spent 4 years at Cognizant working on insurance data - claims performance dashboards, SLA tracking, loss ratio reporting for BFSI clients. This project is my attempt to build the kind of analysis I was doing at work, end-to-end, from scratch, without a team or existing infrastructure.
 
 The goal was to answer questions a Head of Analytics at a non-life insurer would actually care about - lapse drivers, pricing adequacy, CLV by segment, agent productivity. Not just "here's a dashboard," but here's what the data says and what you should do about it.
-Domain: Insurance (Non-Life) | Scale: 3.6M rows, 8 tables | Timeline: 5 days
+Domain: Insurance (Non-Life) | Scale: 3.6M rows, 8 tables 
 
 ---
 
