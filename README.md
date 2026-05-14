@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue) ![PowerBI](https://img.shields.io/badge/Power%20BI-Dashboard-yellow) ![Status](https://img.shields.io/badge/Status-Complete-green)
 
-> End-to-end data analytics project analyzing 3.6M rows of insurance policy data across the full policy lifecycle — from acquisition to lapse, renewal, and claims settlement.
+> End-to-end data analytics project analyzing 3.6M rows of insurance policy data across the full policy lifecycle from acquisition to lapse, renewal, and claims settlement.
 
 ---
 
@@ -20,8 +20,8 @@ Domain: Insurance (Non-Life) | Scale: 3.6M rows, 8 tables | Timeline: 5 days
 | # | Business Question | Insight |
 |---|---|---|
 | 1 | What is the policy lapse rate trend over time? | Stable 17.7% lapse rate across 2015–2024, driven by income and risk profile |
-| 2 | Which states have the highest loss ratios? | 68–71% range across all states — within IRDAI benchmark of 70–110% |
-| 3 | What does the CLV distribution look like? | 74% positive CLV, 26% negative — avg ₹86K |
+| 2 | Which states have the highest loss ratios? | 68–71% range across all states within IRDAI benchmark of 70–110% |
+| 3 | What does the CLV distribution look like? | 74% positive CLV, 26% negative, avg ₹86K |
 | 4 | Which product lines renew best? | Life 47%, Health 42%, Motor 39%, Travel 37% |
 | 5 | Who are the top performing agents? | Top agents sell 1,050–1,095 policies with ₹3.1Cr+ premium written |
 | 6 | Is pricing adequate across product lines? | Motor highest loss ratio at 86%, Life lowest at 55% |
@@ -73,7 +73,7 @@ Python (Faker + pandas)
 
 | Table | Rows | Description |
 |---|---|---|
-| dim_date | 3,653 | Date dimension (2015–2024) |
+| dim_date | 3,653 | Date dimension (2015-2024) |
 | dim_customers | 50,000 | Customer demographics |
 | dim_agents | 500 | Agent and channel info |
 | dim_products | 13 | Product catalog |
@@ -100,7 +100,7 @@ All 7 views use pre-aggregated CTEs to eliminate fan-out join errors - a common 
 
 | View | Purpose |
 |---|---|
-| vw_lapse_trend | Monthly lapse rate % and policy count 2015–2024 |
+| vw_lapse_trend | Monthly lapse rate % and policy count 2015-2024 |
 | vw_loss_ratio_state | Loss ratio by state using correct separate-aggregate method |
 | vw_clv | Customer lifetime value estimates per customer |
 | vw_renewal_behavior | Renewal rates and premium change by product line |
@@ -234,11 +234,11 @@ CLV Prediction → Linear Regression chosen over tree models
 
 ### Model Notes
 
-**Lapse Prediction:** Both models significantly outperform random baseline (AUC 0.50). Logistic Regression uses `class_weight='balanced'` to handle the 18%/82% class imbalance. Random Forest constrained with `max_depth=10` and `min_samples_leaf=50` to prevent overfitting. Top predictive feature: `income_enc` — confirming that affordability is the primary lapse driver.
+**Lapse Prediction:** Both models significantly outperform random baseline (AUC 0.50). Logistic Regression uses `class_weight='balanced'` to handle the 18%/82% class imbalance. Random Forest constrained with `max_depth=10` and `min_samples_leaf=50` to prevent overfitting. Top predictive feature: `income_enc` confirming that affordability is the primary lapse driver.
 
 **CLV Regression:** R² of 0.21 is expected. CLV is primarily driven by stochastic claims events which are not predictable from demographics alone. The model captures the structural component (tenure, risk score, product line) explaining ~21% of variance, consistent with actuarial literature on demographic CLV models.
 
-**KMeans:** Silhouette score of 0.19 reflects soft cluster boundaries as realistic in insurance where customers don't segment sharply. Cluster 3 clearly separates on tenure (32 months vs 14–15 months for others), indicating a committed long-tenure segment.
+**KMeans:** Silhouette score of 0.19 reflects soft cluster boundaries as realistic in insurance where customers don't segment sharply. Cluster 3 clearly separates on tenure (32 months vs 14-15 months for others), indicating a committed long-tenure segment.
 
 ### Charts Generated (reports/v2_calibrated/)
 
@@ -263,9 +263,9 @@ CLV Prediction → Linear Regression chosen over tree models
 - Motor and Travel product lines show higher lapse propensity than Life
 
 ### 2. Loss Ratio
-- Portfolio loss ratio: **69.7%** — within IRDAI non-life benchmark range
+- Portfolio loss ratio: **69.7%** within IRDAI non-life benchmark range
 - Motor highest at **86%**, Life lowest at **55%**
-- All 15 states within 68–71% in tight range reflecting uniform underwriting
+- All 15 states within 68-71% in tight range reflecting uniform underwriting
 - Claim frequency: 39.3% of non-cancelled policies filed at least one claim
 
 ### 3. Customer Lifetime Value
@@ -281,7 +281,7 @@ CLV Prediction → Linear Regression chosen over tree models
 
 ### 5. Agent Performance
 - Top agent (Mitesh Kibe): 1,081 policies, ₹3.16Cr premium, 40.23% renewal
-- Renewal rates range **37–47%** among top 20 agents
+- Renewal rates range **37-47%** among top 20 agents
 - Digital and Direct channels dominate top performers
 
 ### 6. Pricing Adequacy
@@ -338,7 +338,7 @@ stored in `data/raw/`.
 | Metric | Real Data | Synthetic (v2) | Assessment |
 |---|---|---|---|
 | Avg annual premium | $1,256 (≈ ₹1.05L USD-adjusted) | ₹26,259 | Directionally consistent. Indian premiums lower than US due to lower sum insured |
-| Age range | 19–64 (claims), 18–102 (dataset) | 18–70 | Aligned |
+| Age range | 19-64 (claims), 18-102 (dataset) | 18-70 | Aligned |
 | Avg claim amount | $52,762 (≈ ₹44L) per claim | ₹28,400 per claim | US claims higher as expected given higher vehicle/medical costs |
 | Fraud rate | 24.7% of claims flagged | Not modelled in Project 1 | Feeds directly into Project 2 (Fraud Detection) |
 | Claim frequency | 100% (all rows are claims) | 39.3% of policies | Real dataset is claims-only and not comparable to policy-level frequency |
@@ -352,8 +352,8 @@ stored in `data/raw/`.
 
 - **Claim severity:** The real dataset shows average claims of ~$52K (US auto),
   significantly higher than the synthetic ₹28K. This is expected as US liability limits
-  and medical costs are 3–5x Indian equivalents. Synthetic claim amounts were
-  calibrated to IRDAI loss ratio benchmarks (70–110%) rather than absolute US figures.
+  and medical costs are 3-5x Indian equivalents. Synthetic claim amounts were
+  calibrated to IRDAI loss ratio benchmarks (70-110%) rather than absolute US figures.
 
 - **Fraud signal preserved:** The 24.7% fraud rate in the real claims data is a strong
   signal that will be used as the primary target variable in Project 2 Insurance
@@ -380,7 +380,7 @@ rather than being arbitrarily generated.
 
 - **Synthetic data:** Real Indian non-life policy data at transaction level isn't publicly available as insurers treat it as proprietary. I used Faker to generate 3.6M rows and calibrated the distributions against IRDAI benchmarks, but it's not the same as working with actual messy production data. Project 2 uses a real Kaggle claims dataset specifically to address this.
 - **Education/marital lapse uniformity:** I built lapse probability as a function of income, risk score, product line and tenure. That means education and marital status show uniform lapse rates (~15%) across all categories not because they're irrelevant in reality, but because I didn't include them as drivers. A real insurer's lapse model would test these.
-- **Renewal rate (40.7%):** It is lower than the 55–65% industry benchmark, but the denominator only includes policies that have actually reached their renewal date (status: Renewed, Lapsed, or Expired). The 200K+ active policies are excluded. If you include active policies as "not yet renewed," the rate looks artificially depressed.
+- **Renewal rate (40.7%):** It is lower than the 55-65% industry benchmark, but the denominator only includes policies that have actually reached their renewal date (status: Renewed, Lapsed, or Expired). The 200K+ active policies are excluded. If you include active policies as "not yet renewed," the rate looks artificially depressed.
 - **CLV R² (0.21):** CLV is primarily driven by whether a claim occurred and claims are stochastic. Demographic and risk features explain the structural component (~21% of variance), which is consistent with what actuarial literature says about demographic-only CLV models. A higher R² here would have meant something was wrong, not right.
 
 ---
