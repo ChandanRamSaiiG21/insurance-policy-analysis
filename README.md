@@ -8,9 +8,10 @@
 
 ## Project Overview
 
-This project simulates a real-world insurance analytics workflow covering policy lapse prediction, loss ratio analysis, customer lifetime value (CLV), renewal behavior, agent performance, pricing adequacy, and customer segmentation. Built to demonstrate production-grade data analytics skills using Python, PostgreSQL, and Power BI.
+I spent 4 years at Cognizant working on insurance data — claims performance dashboards, SLA tracking, loss ratio reporting for BFSI clients. This project is my attempt to build the kind of analysis I was doing at work, end-to-end, from scratch, without a team or existing infrastructure.
 
-**Domain:** Insurance (Non-Life) | **Scale:** 3.6M rows, 8 tables | **Timeline:** 5 days
+The goal was to answer questions a Head of Analytics at a non-life insurer would actually care about - lapse drivers, pricing adequacy, CLV by segment, agent productivity. Not just "here's a dashboard," but here's what the data says and what you should do about it.
+Domain: Insurance (Non-Life) | Scale: 3.6M rows, 8 tables | Timeline: 5 days
 
 ---
 
@@ -297,7 +298,12 @@ CLV Prediction → Linear Regression chosen over tree models
 
 ## Data Calibration Notes
 
-This project uses synthetic data generated with Python Faker, calibrated against IRDAI industry benchmarks.
+I'll be upfront about what went wrong with v1 and how I fixed it — because this is the part that actually taught me the most.
+The first version looked complete. Star schema loaded, views running, dashboard built, ML notebook done. Then I ran the model evaluation and got R² = 1.0 and MAE = ₹0 on the CLV regression. That's not a good model — that's a broken one. Turned out the features I'd used to predict CLV mathematically defined it. I was training a model to predict X using X. Classic data leakage.
+That sent me back through the whole pipeline. Once I started looking properly, I found three more problems: the loss ratio was 700%+ because I'd scaled claim amounts against sum insured instead of annual premium. The lapse model was getting AUC 0.50 — coin flip — because is_lapsed was generated randomly with no relationship to any feature. And the risk score was a flat 50.0 for every policy because I'd used random.uniform without any conditioning.
+Four days of work, and the data was telling me nothing useful.
+The v2 rebuild injected real statistical relationships. Risk score is now a function of age, income, product line and tenure. Lapse probability follows a logistic function driven by risk score and income. CLV is calculated as premiums collected minus claims paid minus acquisition cost — not derived from premium columns. Claim amounts are scaled to annual premium, bringing the loss ratio to 69.7%.
+The original charts are in reports/v1_uncalibrated/ if you want to see the before/after.
 
 ### v1 → v2 Calibration (Key Fixes)
 
@@ -372,10 +378,10 @@ rather than being arbitrarily generated.
 
 ## Limitations
 
-- **Synthetic data:** All data is Faker-generated. Distributions are calibrated to industry benchmarks but do not reflect a real insurer's portfolio.
-- **Education/marital lapse uniformity:** Lapse probability was modelled on income, risk score, product line, and tenure only. Education and marital status show uniform lapse rates as they were not included as lapse drivers.
-- **Renewal rate (40.7%):** Lower than industry benchmark (55–65%) because only matured policies (Renewed/Lapsed/Expired) are included. Active policies haven't reached renewal date yet.
-- **CLV R² (0.21):** Expected for a demographic-only model. Claims are stochastic events — actuarial CLV models use survival analysis and BG/NBD models for higher accuracy.
+- **Synthetic data:** Real Indian non-life policy data at transaction level isn't publicly available — insurers treat it as proprietary. I used Faker to generate 3.6M rows and calibrated the distributions against IRDAI benchmarks, but it's not the same as working with actual messy production data. Project 2 uses a real Kaggle claims dataset specifically to address this.
+- **Education/marital lapse uniformity:** I built lapse probability as a function of income, risk score, product line and tenure. That means education and marital status show uniform lapse rates (~15%) across all categories — not because they're irrelevant in reality, but because I didn't include them as drivers. A real insurer's lapse model would test these.
+- **Renewal rate (40.7%):** It is lower than the 55–65% industry benchmark, but the denominator only includes policies that have actually reached their renewal date (status: Renewed, Lapsed, or Expired). The 200K+ active policies are excluded. If you include active policies as "not yet renewed," the rate looks artificially depressed.
+- **CLV R² (0.21):** CLV is primarily driven by whether a claim occurred — and claims are stochastic. Demographic and risk features explain the structural component (~21% of variance), which is consistent with what actuarial literature says about demographic-only CLV models. A higher R² here would have meant something was wrong, not right.
 
 ---
 
