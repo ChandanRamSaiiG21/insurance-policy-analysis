@@ -301,7 +301,7 @@ CLV Prediction → Linear Regression chosen over tree models
 I'll be upfront about what went wrong with v1 and how I fixed it because this is the part that actually taught me the most.
 The first version looked complete. Star schema loaded, views running, dashboard built, ML notebook done. Then I ran the model evaluation and got R² = 1.0 and MAE = ₹0 on the CLV regression. That's not a good model, that's a broken one. Turned out the features I'd used to predict CLV mathematically defined it. I was training a model to predict X using X. Classic data leakage.
 That sent me back through the whole pipeline. Once I started looking properly, I found three more problems: the loss ratio was 700%+ because I'd scaled claim amounts against sum insured instead of annual premium. The lapse model was getting AUC 0.50 (coin flip) because is_lapsed was generated randomly with no relationship to any feature. And the risk score was a flat 50.0 for every policy because I'd used random.uniform without any conditioning.
-After days of work, and the data was telling me nothing useful.
+After days of work, the data was telling me nothing useful.
 The v2 rebuild injected real statistical relationships. Risk score is now a function of age, income, product line and tenure. Lapse probability follows a logistic function driven by risk score and income. CLV is calculated as premiums collected minus claims paid minus acquisition cost and not derived from premium columns. Claim amounts are scaled to annual premium, bringing the loss ratio to 69.7%.
 The original charts are in reports/v1_uncalibrated/ if you want to see the before/after.
 
@@ -371,7 +371,7 @@ Real Indian non-life insurance policy data at transaction level is not publicly
 available as insurers treat policy-level data as proprietary. The synthetic approach
 mirrors standard actuarial practice where simulated data is used for model development
 before production deployment. The calibration process (documented in the
-Data Calibration Notes section) ensured distributions match published IRDAI benchmarks
+Data Calibration: v1 → v2 Notes section) ensured distributions match published IRDAI benchmarks
 rather than being arbitrarily generated.
 
 ---
