@@ -1,6 +1,6 @@
 # Insurance Policy Lifecycle Analysis
 
-![Python](https://img.shields.io/badge/Python-3.13-blue) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue) ![PowerBI](https://img.shields.io/badge/Power%20BI-Dashboard-yellow) ![Status](https://img.shields.io/badge/Status-Complete-green)
+![Python](https://img.shields.io/badge/Python-3.13-blue) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue) ![PowerBI](https://img.shields.io/badge/Power%20BI-Dashboard-yellow) ![ML](https://img.shields.io/badge/ML-scikit--learn-orange) ![Validated](https://img.shields.io/badge/Real_Data-Validated-brightgreen) ![Status](https://img.shields.io/badge/Status-Complete-green)
 
 > End-to-end data analytics project analyzing 3.6M rows of insurance policy data across the full policy lifecycle from acquisition to lapse, renewal, and claims settlement.
 
@@ -292,16 +292,16 @@ CLV Prediction → Linear Regression chosen over tree models
 ### 7. Customer Segmentation
 - **2L–5L income bracket** is the largest segment (17K customers, 35% of portfolio)
 - Lapse rate by income shows clear gradient as affordability is a key retention lever
-- Education and marital status show uniform lapse rates (~15%) as its not included as lapse drivers in the synthetic model
+- Education and marital status show uniform lapse rates (~15%) as they weren't included as lapse drivers in the synthetic model
 
 ---
 
-## Data Calibration Notes
+## Data Calibration: v1 → v2 (Lessons Learned)
 
 I'll be upfront about what went wrong with v1 and how I fixed it because this is the part that actually taught me the most.
 The first version looked complete. Star schema loaded, views running, dashboard built, ML notebook done. Then I ran the model evaluation and got R² = 1.0 and MAE = ₹0 on the CLV regression. That's not a good model, that's a broken one. Turned out the features I'd used to predict CLV mathematically defined it. I was training a model to predict X using X. Classic data leakage.
 That sent me back through the whole pipeline. Once I started looking properly, I found three more problems: the loss ratio was 700%+ because I'd scaled claim amounts against sum insured instead of annual premium. The lapse model was getting AUC 0.50 (coin flip) because is_lapsed was generated randomly with no relationship to any feature. And the risk score was a flat 50.0 for every policy because I'd used random.uniform without any conditioning.
-Four days of work, and the data was telling me nothing useful.
+After days of work, and the data was telling me nothing useful.
 The v2 rebuild injected real statistical relationships. Risk score is now a function of age, income, product line and tenure. Lapse probability follows a logistic function driven by risk score and income. CLV is calculated as premiums collected minus claims paid minus acquisition cost and not derived from premium columns. Claim amounts are scaled to annual premium, bringing the loss ratio to 69.7%.
 The original charts are in reports/v1_uncalibrated/ if you want to see the before/after.
 
